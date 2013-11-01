@@ -1,0 +1,6 @@
+node [ fontname=Helvetica, fontsize=12 ];
+rankdir=TB;
+"main" -> "exit";
+"main" -> "processStream";
+"processStream" -> "_processStream";
+"_processStream" -> "_processStream";

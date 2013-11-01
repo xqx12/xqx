@@ -1,0 +1,9 @@
+F {main} {main.c:7}
+C {main} {main.c:31} {exit}
+C {main} {main.c:31} {free}
+C {main} {main.c:31} {manipulateStream}
+C {main} {main.c:31} {processStream}
+C {main} {main.c:31} {exit}
+C {main} {main.c:31} {__builtin_puts}
+C {main} {main.c:31} {malloc}
+C {main} {main.c:31} {__builtin_puts}

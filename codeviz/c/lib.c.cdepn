@@ -1,0 +1,7 @@
+F {manipulateStream} {lib.c:18}
+C {manipulateStream} {lib.c:21} {__builtin_puts}
+F {processStream} {lib.c:14}
+C {processStream} {lib.c:21} {_processStream}
+F {_processStream} {lib.c:5}
+C {_processStream} {lib.c:21} {_processStream}
+C {_processStream} {lib.c:21} {printf}

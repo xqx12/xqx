@@ -1,25 +1,9 @@
 #!/usr/bin/perl
-# This is a script for generating call graphs based on the full graph generated
+# This is a script for generating paths from funcA to funcB based on the full graph generated
 # by genfull . The parameters are fully described in the man page viewable
-# by running gengraph --man
 #
-# The graph is represented internally as a DAG where each node is a function
-# and each edge is a call. The fields in a dag node are
-#
-# label    - Label of the node to display. Used to hash into the graph
-# outbound - Number of nodes this connects to
-# inbound  - Number of nodes connecting to here
-# callers  - List of nodes that call the current code
-# callees  - List of nodes that the current node calls
-#
-# For running in daemon mode, a pipe is opened in $PIPE (/tmp/codeviz.pipe)
-# which clients write to. The parameters that normally exist on the command
-# line are passed in as one line where each paramater is seperated by the
-# delimiter #()# . Once a pipe has been written, select() will block as it
-# should. To address this, the daemon sleeps for 0.1 seconds for 1 second and
-# then sleeps for one second until a total of 3 seconds has expired. If no
-# input has arrived in that time, the pipe is reopened so that the process
-# will block.
+# This script is modified by xqx 201311
+
 #
 # The main loop is in gengraph_main() which builds what information is needed
 # for subgraph() 
@@ -163,7 +147,7 @@ $LOCATION = 1 if $ALL_LOCS == 1;
 pod2usage(-exitstatus => 0, -verbose => 0) if $HELP;
 pod2usage(-exitstatus => 0, -verbose => 2) if $MAN;
 if ($SHOWVERSION) {
-  print "(CodeViz) gengraph $VERSION\n";
+  print "(CodeViz) genpath $VERSION\n";
   exit 1;
 }
 
@@ -714,56 +698,20 @@ printverbose("Generating trimlist\n");
 __END__
 =head 1 NAME
 
-gengraph - Generate a call graph for a given set of functions
+genpath - Generate paths from funcA to funcB 
 
 =head1 SYNOPSIS
 
 gengraph [options]
 
   Main Options:
-  -f, --function    Top level functions to graph, quote if more than one
-  -t, --trim        Ignore a set of Linux kernel functions (Kernel specific)
-  -i, --ignore      Functions to ignore
-  -s, --show        Show a function but not the sub-functions
+  -f, --function    start function of the path
+  -c, --function    end function of the path
   -d, --maxdepth    Maximum depth of graph
-  -r, --reverse     Place the function at the bottom and graph callers
-  -g, --graph       Source graph from by genfull (Default: ./full.graph)
-  -l, --location    Show the location of the function declarations
-  -a, --all-locs    Show the location of declarations and calls
   -k, --keep        Keep the sub.graph file
-  -o, --output      Output postscript filename
   -v, --verbose     Verbose output
   -h, --help        Print this message
-  --no-extern       Ignore functions not defined in the current source
-  --output-type     Set the output type: ps, html png or gif (default: ps)
-  --output-font     What font to use for output graph (default: Helvetica)
-  --output-fontsize Size of output font (default: 12)
-  --output-layout   Layout direction: LR|RL|BT|TB (default TB)
-  --version         Print the version number
 
-  HTML Options (specify --output-type=html above):
-  -e, --source      Root of the source code being graphed
-  --html-fragment   Generate HTML suitable for including in another page
-  --base-url        Template URL to use for hyperlinks in the web page
-  --shighlight      Use source-highlight for HTML links
-  --scss            Cascading style-sheet to use for source-highlight
-
-  Regular Expression Options:
-  -z, --func-re     Regular expressions of top-level functions to graph
-  -j, --ignore-re   Regular expressions of functions to ignore
-  -y, --show-re     Regular expressions of functions to show but not traverse
-
-  Post-Processing Options:
-  --pp-stack        Show stack usage and highlight excessive usage
-  --pp-cstack       Show cumulative usage in a given set of code paths
-  --pp-oprofile     Show function costs from an oprofile report
-
-  Daemon Options:
-  -p, --daemon      Run gengraph as a daemon
-  -q, --client      Run gengraph as a client to a gengraph daemon
-  --plain           Output the dot graph file but do not use dot
-  --stdout          Use this file as standard out instead of normal
-  --stderr          Print errors to this file instead of STDERR
 
 =head1 OPTIONS
 

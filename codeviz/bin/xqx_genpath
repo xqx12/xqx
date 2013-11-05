@@ -93,8 +93,7 @@ my $PPOPROFILE;
 my ($TMPDIR, $TMPFD, $TEMP);
 
 # addbyxqx20131105
-my $FUNC_END;    #for path end; Func B in  A->B 
-
+my $FUNC_END;    #for path end; Func B in  A->B
 
 # Alternative linux loader. If you don't know why you might need this, you don't
 # need it at all. If this changed, ensure you update it in IPC.pm as well
@@ -124,7 +123,7 @@ GetOptions(
     'stdout=s'        => \$STDOUT,
     'base-url=s'      => \$BASEURL,
     'd|maxdepth=s'    => \$MAXDEPTH,
-    'e|function=s'    => \$FUNC_END,
+    'c|function=s'    => \$FUNC_END,
     'f|function=s'    => \$FUNC,
     'z|func-re=s'     => \$FUNC_RX,
     'g|graph=s'       => \$GRAPH,
@@ -190,6 +189,34 @@ if ($PLAIN_OUTPUT) { $OUTPUT_TYPE="plain"; }
 set_verbose($VERBOSE);
 set_daemon($DAEMON);
 
+# Shutdown a running daemon if it's running
+if ($QUIT) {
+  daemon_close();
+}
+
+# Use gengraph in client mode if requsted
+if ($CLIENT) {
+  client_open();
+  client_write($TRIM, $OUTPUT_TYPE, $ALL_LOCS, $LOCATION, $REVERSE, $FUNC, $FUNC_RX, $MAXDEPTH, $IGNORE, $IGNORE_RX, $SHOW, $SHOW_RX, $PLAIN_OUTPUT, $OUTPUT, $VERBOSE, $STDOUT);
+  exit;
+}
+
+# Update the 'source-highlight' command if a CSS is provided.
+# default CSS?
+if ($CSS) {
+  if ( $OUTPUT_TYPE !~ /html/ ) {
+    printverbose("CSS is only useful with a URL, the '-u' option. ");
+  }
+}
+
+# Create the base URL if it has not already been set
+if ($BASEURL eq "--unset--") {
+  if ($USE_SHIGHLIGHT) {
+    $BASEURL="file://$SOURCE_ROOT/html_sources/\%f.html#\%l";
+  } else {
+    $BASEURL="file://$SOURCE_ROOT/\%f.html#\%l";
+  }
+}
 
 # Test that dot is installed
 if ($OUTPUT_TYPE ne "plain") { test_dot_installed(); }
@@ -197,6 +224,7 @@ if ($OUTPUT_TYPE ne "plain") { test_dot_installed(); }
 # Read the input callgraph
 $HEADER = read_inputgraph($GRAPH, $LOCATION, $OUTPUT_TYPE, $BASEURL, $OUTPUT_FONT, $OUTPUT_FONTSIZE, \%dag);
 
+print "------$FUNC, $FUNC_END\n";
 $FUNC = resolveNode($FUNC);
 
 # Check if the function requested is ambiguous
@@ -205,6 +233,15 @@ $FUNC = resolveNode($FUNC);
 # actual header used is returned in case it is different
 $HEADER = test_dot_generate($OUTPUT_TYPE, $OUTPUT_FONT, $HEADER);
 
+# Print startup message if in daemon mode
+if ($DAEMON) {
+  printverbose("Starting Call Graph Server\n");
+  daemon_open();
+
+  # Test the various output formats
+  $HEADER = test_dot_generate("gif", $OUTPUT_FONT, $HEADER);
+}
+
 
 # Generate trimlist
 generate_trimlist();
@@ -212,6 +249,18 @@ generate_trimlist();
 # Test if source-highlight is available
 if ($USE_SHIGHLIGHT) { test_shighlight_installed(); }
 
+# Finish startup if in daemon mode and fork off
+if ($DAEMON) {
+
+  printverbose("Call Graph Server Started\n");
+
+  # Fork off as daemon
+  chdir("/");
+  defined(my $pid = fork) || die_nice("While forking: $!");
+  exit if $pid;
+  setsid || die_nice("Can't start a new session: $!");
+
+}
 
 # Generate the requested callgraph or go into a loop in daemon mode
 gengraph_main();
@@ -228,12 +277,13 @@ sub gengraph_main() {
   # Create temporary directory
   my $TEMPDIR = tempdir( CLEANUP => 1 );
 
-  #while ($doonce) {
   while ($doonce || $DAEMON) {
     # In non-daemon mode, this loop will execute just once
     $doonce = 0;
-    
-	# Re-open stderr if errors are not going to standard out
+
+  
+
+    # Re-open stderr if errors are not going to standard out
     if ($STDERR ne "STDERR") {
       printverbose("Opening extra stderr: $STDERR\n");
       if (!open(STDERR_EXTRA, ">$STDERR")) {
@@ -265,7 +315,7 @@ sub gengraph_main() {
       # Set output filename if not set already
       if ( $OUTPUT eq "--unset--" ) {
         $OUTPUT="$afunc";
-    	$OUTPUT .= ".$OUTPUT_TYPE";
+	$OUTPUT .= ".$OUTPUT_TYPE";
       }
 
       # Open temporary file for graph
@@ -278,10 +328,10 @@ sub gengraph_main() {
           printverbose("Opened graph output file: $TEMPDIR\n");
         }
 
-	   $tmpfd_opened=1;
-       print $TMPFD $HEADER;
-	   print $TMPFD "rankdir=$OUTPUT_LAYOUT;\n";
-     }
+	$tmpfd_opened=1;
+        print $TMPFD $HEADER;
+	print $TMPFD "rankdir=$OUTPUT_LAYOUT;\n";
+      }
 
       # Set node attributes to show where the graph starts
       setNodeAttribute("shape",     "box",         \$dag{$afunc});
@@ -294,12 +344,13 @@ sub gengraph_main() {
       $TOTALVISITS=0;
       if ( $REVERSE == 1) { subgraph(0, "callers", \$dfunc); }
       else                { subgraph(0, "callees", \$dfunc);         }
-    } # foreach keys %funclist
+    }
 
     # Make sure there is a graph to print
     if ($TOTALVISITS == 0) {
       printverbose("Warning: Generated empty graph\n");
       printerror("Empty output graph, requested function does not exist\n");
+
       next;
     }
 
@@ -400,7 +451,7 @@ sub subgraph($$$) {
       # Strip off parameter information unless asked to keep it
       #if (!$OUTPUT_LONG) {
         #$pfrom =~ s/\(.*\)//;
-    	#$pto   =~ s/\(.*\)//;
+	#$pto   =~ s/\(.*\)//;
       #}
 
       # Print out graph element. The order they are printed in depends on the 
@@ -434,12 +485,11 @@ sub subgraph($$$) {
 
       # set the print flags addbyxqx201310
       $xqxprint{$fto_name} = 0;
-      if ( $fto_name eq $FUNC_END ) {
-          $xqxprint{$fto_name} = 1;
+	  if ( $fto_name eq $FUNC_END ) {
+		  $xqxprint{$fto_name} = 1;
       }
-
-	  
-      # Traverse further if necessary
+      
+	  # Traverse further if necessary
       if ($showlist{$fto_name} != 1 &&
           ( !grep { $fto_name =~ m:$_: } @showlist_re ) &&
           $$fto->{'outbound'} != 0) { subgraph($depth+1, $direction, $fto); }
@@ -455,14 +505,7 @@ sub subgraph($$$) {
 		   $deleted = 1;
 		    dellastline($$TMPFD);
 	   }
-
-	  if($$fto->{'outbound'} != 0 && $deleted == 0) {
-	       if ( $xqxprint{$ffrom_name} == 0 ) {
-			   print "deletefrom $ffrom_name\n";
-		       dellastline($TMPFD);
-            print "------delelte\n";
-	       }
-       }   
+    }
 
   }
 
@@ -488,6 +531,8 @@ sub dellastline($) {
   close(FH);
   open ($TMPFD, ">> $TEMP");
 }
+
+
 # This generates a list of functions that should no be be traversed
 # They are mainly applicable to just the Linux Kernel but if graphing
 # the kernel, it is highly recommended that the -t switch is used

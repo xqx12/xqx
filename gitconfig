@@ -1,8 +1,41 @@
 
 [alias]
 	lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
-
+	co = checkout
+	ca = commit -a
+	cam = commit -am
+	s = status
+	br = branch
+	bra = branch -a
+	ps = push
+	pso = push origin
+	pl = pull
+	plo = pull origin
+	ft = fetch
+	fto = fetch -p origin
+    rv = remote -v
+[user]
+	name = XiaoQixue
+	email = xiaoqixue_1@163.com
 [color]
 	ui = true
 [core]
 	editor = vim
+	excludesfile = /home/xqx/.gitignore_global
+[diff]
+	tool = vimdiff
+[difftool]
+	prompt = No
+[push]
+	default = simple
+[merge]
+	tool = vimdiff
+[filter "media"]
+	clean = git-media-clean %f
+	smudge = git-media-smudge %f
+[difftool "sourcetree"]
+	#cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path = 
+[mergetool "sourcetree"]
+	#cmd = /Applications/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true

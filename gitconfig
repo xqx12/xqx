@@ -14,6 +14,7 @@
 	ft = fetch
 	fto = fetch -p origin
     rv = remote -v
+    files = show --pretty="" --name-only 
 [user]
 	name = XiaoQixue
 	email = xiaoqixue_1@163.com

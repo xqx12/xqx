@@ -10,6 +10,7 @@ https://github.com/Manisha-Bayya/simple-django-project.git
 # file_upload
 
 ## view.py
+```
 from django.http import Http404, HttpResponse
 import datetime
 from django.shortcuts import render
@@ -46,10 +47,11 @@ def file_upload(request):
                 f.write(line)
         f.close()
         return HttpResponse('OK')
-
+```
 
 ## template
 
+```
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -64,3 +66,4 @@ def file_upload(request):
  </body>
 
  </html> 
+```

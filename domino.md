@@ -13,3 +13,11 @@ https://oda.openntf.org/main.nsf/project.xsp?r=project/OpenNTF%20Domino%20API
 https://github.com/libyal/libnsfdb
 
 https://www.redbooks.ibm.com/redpapers/pdfs/redp4102.pdf
+
+#### using java to access domino
+https://github.com/klehmann/domino-jna
+
+
+Simple example application that initializes the connection to a local Notes Client, opens the names.nsf database and reads the People view content.
+
+https://github.com/klehmann/domino-jna/blob/master/standalone-app-sample/mvnw.cmd
